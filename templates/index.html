@@ -1,0 +1,83 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>АВТОЛАЙН — автошкола рядом с вами</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+    <header class="site-header">
+        <a class="logo" href="{% url 'index' %}">
+            <span>АВТО</span><span class="logo-accent">ЛАЙН</span>
+        </a>
+        <nav class="main-nav">
+            <a href="{% url 'index' %}#groups">Расписание</a>
+            <a href="{% url 'index' %}#categories">Цены</a>
+            <a href="{% url 'index' %}#contacts">Контакты</a>
+            <a class="login-button" href="{% url 'admin:login' %}">Войти</a>
+        </nav>
+    </header>
+
+    <main class="page-content">
+        <section class="intro">
+            <h1>Учитесь водить<br>спокойно и уверенно</h1>
+            <p>Автошкола рядом с вами</p>
+        </section>
+
+        <section class="hero-card">
+            <div>
+                <h2>Ваш путь к правам</h2>
+                <p>Теория и практика в одном кабинете</p>
+                <a class="primary-button hero-button" href="{% url 'index' %}#groups">Выбрать группу</a>
+            </div>
+        </section>
+
+        <section id="categories">
+            <h2 class="section-title">Категории обучения</h2>
+            <div class="category-grid">
+                {% for category in categories %}
+                    <article class="category-card">
+                        <h3>Категория {{ category.code }}</h3>
+                        <p>{{ category.name }}</p>
+                    </article>
+                {% empty %}
+                    <p class="empty-state">Категории обучения пока не добавлены.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section id="groups">
+            <h2 class="section-title">Ближайшие группы</h2>
+            <div class="group-list">
+                {% for group in groups %}
+                    <article class="group-card">
+                        <div>
+                            <h3>{{ group.name }}</h3>
+                            <p>Старт: {{ group.start_date|date:"j E" }} · от {{ group.price|floatformat:0 }} ₽</p>
+                        </div>
+                        <a class="group-arrow" href="{% url 'index' %}#groups">→</a>
+                    </article>
+                {% empty %}
+                    <p class="empty-state">Сейчас нет доступных учебных групп. Информация появится позже.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer" id="contacts">
+        <div>
+            <a class="footer-logo" href="{% url 'index' %}">АВТОЛАЙН</a>
+            <p>Обучаем уверенно водить</p>
+        </div>
+        <nav class="footer-nav">
+            <a href="#contacts">Контакты</a>
+            <a href="#contacts">Соцсети</a>
+            <a href="#contacts">Политика</a>
+        </nav>
+    </footer>
+
+</body>
+</html>
