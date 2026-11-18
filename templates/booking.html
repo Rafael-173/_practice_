@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<p class="breadcrumbs">
+    <a href="{% url 'cabinet' %}">Кабинет</a> / Запись на вождение
+</p>
+
+<div class="form-card">
+    <span class="eyebrow">ПОДТВЕРЖДЕНИЕ ЗАПИСИ</span>
+    <h1>Занятие с инструктором</h1>
+    <p><b>{{ slot.instructor }}</b></p>
+    <p>{{ slot.date|date:"d.m.Y" }} · {{ slot.start_time|time:"H:i" }}–{{ slot.end_time|time:"H:i" }}</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn">Подтвердить запись</button>
+    </form>
+</div>
+{% endblock %}

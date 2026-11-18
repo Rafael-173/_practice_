@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-title">
+    <span class="eyebrow">РАБОЧИЙ КАБИНЕТ</span>
+    <h1>Мой график</h1>
+</div>
+
+<div class="detail-layout">
+    <section>
+        <h2>Свободные окна</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Начало</th>
+                        <th>Окончание</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot in slots %}
+                        <tr>
+                            <td>{{ slot.date|date:"d.m.Y" }}</td>
+                            <td>{{ slot.start_time|time:"H:i" }}</td>
+                            <td>{{ slot.end_time|time:"H:i" }}</td>
+                            <td>{% if slot.is_booked %}Занято{% else %}Свободно{% endif %}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4">Окон пока нет.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    
+    <aside class="form-card">
+        <h2>Добавить окно</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn">Сохранить окно</button>
+        </form>
+    </aside>
+</div>
+{% endblock %}

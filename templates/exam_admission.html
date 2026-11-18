@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-title">
+    <span class="eyebrow">АДМИНИСТРИРОВАНИЕ</span>
+    <h1>Допуск к экзамену</h1>
+</div>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Курсант</th>
+                <th>Группа</th>
+                <th>Часы</th>
+                <th>Теория</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in students %}
+                <tr>
+                    <td>{{ s }}</td>
+                    <td>{{ s.group.name }}</td>
+                    <td>{% if s.hours_card %}{{ s.hours_card.hours_done }} / {{ s.hours_card.required_hours }}{% else %}Нет данных{% endif %}</td>
+                    <td>{% if s.license_passed %}Сдана{% else %}Не сдана{% endif %}</td>
+                    <td>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="student_id" value="{{ s.pk }}">
+                            <button class="btn btn-small">Допустить</button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5">Курсанты не найдены.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

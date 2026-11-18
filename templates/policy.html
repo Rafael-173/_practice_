@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-title">
+    <span class="eyebrow">ПРАВИЛА</span>
+    <h1>Политика отмены записи</h1>
+</div>
+
+<div class="form-card policy" style="max-width: 800px; margin: 0;">
+    <div class="policy-card">
+        <h3>Отмена записи</h3>
+        <p>Отмена записи на вождение не позднее чем за 24 часа до начала.</p>
+        <div class="notice success">Бесплатная отмена</div>
+    </div>
+
+    <div class="policy-card">
+        <h3>Поздняя отмена</h3>
+        <p>Позже чем за 24 часа — запись сгорает.</p>
+        <div class="notice error">Занятие считается использованным</div>
+    </div>
+
+    <h2 style="margin-top: 24px; font-size: 18px;">Нужна помощь?</h2>
+    <p style="color: var(--muted);">Свяжитесь с администратором автошколы.</p>
+    <a href="#" class="btn" style="width: 100%; margin-top: 12px;">Контакты автошколы</a>
+</div>
+{% endblock %}
