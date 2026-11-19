@@ -64,6 +64,7 @@ def cabinet(request):
 def booking_create(request, slot_id):
     slot = get_object_or_404(InstructorSlot, id=slot_id)
     
+    
     if request.method == 'POST':
         logger.info(f"Курсант {request.user.username} пытается записаться на слот {slot_id}")
         
@@ -95,9 +96,9 @@ def booking_create(request, slot_id):
             slot.is_booked = True
             slot.save()
             
-            # ДЕФЕКТ 3 (Тип данных): пытаемся прибавить строку к числу. Если у курсанта есть карточка часов, будет TypeError.
+            # ДЕФЕКТ 3 (Тип данных): исправлено
             if hours_card := HoursCard.objects.filter(student=student).first():
-                hours_card.remaining = hours_card.remaining + "5" # ОШИБКА ЗДЕСЬ
+                hours_card.remaining = hours_card.remaining + 5 
                 hours_card.save()
 
             logger.info(f"Успешная запись: курсант {student.user.username} на слот {slot_id}, бронь создана")
