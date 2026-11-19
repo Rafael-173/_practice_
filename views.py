@@ -30,9 +30,8 @@ def group_list(request):
     })
 
 def group_detail(request, pk):
-    # ДЕФЕКТ 2 (Пустой QuerySet): используем .get() вместо get_object_or_404. 
-    # Если группы с таким pk нет, вылетит ошибка 500.
-    group = StudyGroup.objects.get(pk=pk) 
+    # ДЕФЕКТ 2 исправлено
+    group = get_object_or_404(StudyGroup, pk=pk) 
     return render(request, 'group_detail.html', {'group': group})
 
 def policy(request):
