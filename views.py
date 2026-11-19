@@ -162,8 +162,8 @@ def checkout(request, group_id):
             }
         )
         
-        # ДЕФЕКТ 1 (Логика): Итоговая цена считается неверно (прибавляем 5000)
-        total_price = group.price + 5000 
+        
+        total_price = group.price 
         logger.info(f"Пользователь {request.user.username} оплатил группу. Сумма: {total_price}")
         
         messages.success(request, "Оплата прошла успешно! Вы зачислены.")
