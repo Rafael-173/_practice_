@@ -1,11 +1,16 @@
+import logging
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
 from django.contrib import messages
-from .models import Category, StudyGroup, Student, Branch, InstructorSlot, Booking, HoursCard, InternalExam
+from .models import Category, StudyGroup, Student, Branch, InstructorSlot, Booking, HoursCard, InternalExam, Car, Enrollment
 from .forms import RegistrationForm
 
+# Создаем логгер для этого модуля
+logger = logging.getLogger(__name__)
+
 def index(request):
+    logger.debug("Загрузка главной страницы")
     categories = Category.objects.filter(code__in=("A", "B")).order_by("code")
     groups = StudyGroup.objects.select_related("category", "branch").order_by("start_date")[:3]
     return render(request, "index.html", {"categories": categories, "groups": groups})
@@ -32,10 +37,13 @@ def policy(request):
 
 @login_required
 def cabinet(request):
+    logger.debug(f"Загрузка кабинета для пользователя: {request.user.username}")
+    
     # Ищем курсанта по текущему пользователю
     student = Student.objects.filter(user=request.user).first()
     
     if not student:
+        logger.warning(f"Пользователь {request.user.username} не является курсантом")
         messages.error(request, "Вы не являетесь курсантом автошколы.")
         return redirect('index')
         
@@ -43,6 +51,7 @@ def cabinet(request):
     hours = HoursCard.objects.filter(student=student).first()
     exams = InternalExam.objects.filter(student=student)
 
+    logger.info(f"Кабинет успешно загружен для курсанта: {student.user.get_full_name()}")
     return render(request, 'cabinet.html', {
         'student': student,
         'bookings': bookings,
@@ -55,42 +64,46 @@ def booking_create(request, slot_id):
     slot = get_object_or_404(InstructorSlot, id=slot_id)
     
     if request.method == 'POST':
+        logger.info(f"Курсант {request.user.username} пытается записаться на слот {slot_id}")
+        
         # 1. Проверяем, не занято ли уже это окно
         if slot.is_booked:
+            logger.warning(f"Попытка записи на уже занятый слот {slot_id}")
             messages.error(request, "Это окно уже занято. Выберите другое время.")
             return redirect('cabinet')
         
         # 2. Получаем курсанта
         student = Student.objects.filter(user=request.user).first()
         if not student:
+            logger.warning(f"Пользователь {request.user.username} не является курсантом и не может бронировать")
             messages.error(request, "Только курсанты могут записываться на вождение.")
             return redirect('index')
             
         # 3. Создаем запись
-        # Примечание: в модели Booking есть поле car (автомобиль). 
-        # Если в форме его нет, нужно выбрать первый доступный автомобиль инструктора.
-        car = student.group.instructors.first().cars.first() if hasattr(student.group, 'instructors') else None
-        
-        # Для упрощения берем первую машину инструктора, если она есть
-        from .models import Car
         car = Car.objects.filter(instructor=slot.instructor).first()
         
         if not car:
+            logger.error(f"У инструктора {slot.instructor} нет закрепленного автомобиля (слот {slot_id})")
             messages.error(request, "У инструктора нет закрепленного автомобиля.")
             return redirect('cabinet')
 
-        Booking.objects.create(
-            student=student,
-            slot=slot,
-            car=car,
-            status='active'
-        )
-        
-        # 4. Помечаем окно как занятое
-        slot.is_booked = True
-        slot.save()
-        
-        messages.success(request, "Вы записаны на вождение!")
+        try:
+            Booking.objects.create(
+                student=student,
+                slot=slot,
+                car=car,
+                status='active'
+            )
+            # 4. Помечаем окно как занятое
+            slot.is_booked = True
+            slot.save()
+            
+            logger.info(f"Успешная запись: курсант {student.user.username} на слот {slot_id}, бронь создана")
+            messages.success(request, "Вы записаны на вождение!")
+        except Exception as e:
+            logger.error(f"Ошибка при создании брони для слота {slot_id}: {e}")
+            messages.error(request, "Произошла ошибка при сохранении записи. Попробуйте позже.")
+            
         return redirect('cabinet')
         
     return render(request, 'booking.html', {'slot': slot})
@@ -107,12 +120,49 @@ def register(request):
     if request.user.is_authenticated:
         return redirect("cabinet")
     if request.method == "POST":
+        logger.info("Попытка регистрации нового пользователя")
         form = RegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
+            logger.info(f"Успешная регистрация нового пользователя: {user.username}")
             messages.success(request, "Регистрация прошла успешно. Добро пожаловать!")
             return redirect("cabinet")
+        else:
+            logger.warning(f"Ошибка валидации формы регистрации: {form.errors}")
     else:
         form = RegistrationForm()
     return render(request, "register.html", {"form": form})
+
+@login_required
+def checkout(request, group_id):
+    group = get_object_or_404(StudyGroup, id=group_id)
+    
+    if request.method == 'POST':
+        # Имитация оплаты
+        enrollment, created = Enrollment.objects.get_or_create(
+            user=request.user,
+            defaults={'group': group, 'is_paid': True}
+        )
+        
+        if not created:
+            enrollment.group = group
+            enrollment.is_paid = True
+            enrollment.save()
+        
+        # Создаем курсанта, если его еще нет
+        Student.objects.get_or_create(
+            user=request.user,
+            defaults={
+                'group': group,
+                'birth_date': '2000-01-01',  # Заглушка (потом можно заменить на форму)
+                'phone': '+7 000 000-00-00',
+                'transmission_type': 'MT',
+                'contract_hours': 56,
+            }
+        )
+        
+        messages.success(request, "Оплата прошла успешно! Вы зачислены.")
+        return redirect('cabinet')
+        
+    return render(request, 'checkout.html', {'group': group})
