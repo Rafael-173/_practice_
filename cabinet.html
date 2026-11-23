@@ -13,14 +13,45 @@
         <b>{{ student.group.category.code }}</b>
     </div>
     <div class="stat">
-        <span>Откатано часов</span>
-        <b>{{ hours.hours_done|default:"0" }} / {{ hours.required_hours|default:student.contract_hours }}</b>
-    </div>
-    <div class="stat">
         <span>Теория</span>
         <b>{% if student.license_passed %}Сдана{% else %}В процессе{% endif %}</b>
     </div>
 </div>
+
+{% if hours %}
+<section class="driving-record" style="margin-bottom: 24px;">
+    <h2>Карточка вождения</h2>
+    <div class="stats" style="margin-bottom: 16px;">
+        <div class="stat">
+            <span>Площадка</span>
+            <b>{{ hours.hours_platform|default:"0" }} ч</b>
+        </div>
+        <div class="stat">
+            <span>Город</span>
+            <b>{{ hours.hours_city|default:"0" }} ч</b>
+        </div>
+        <div class="stat">
+            <span>Всего откатано</span>
+            <b>{{ hours.hours_done }} / {{ hours.required_hours }}</b>
+        </div>
+    </div>
+    
+    {% if driving_records %}
+        <h3>Занятия и комментарии инструктора</h3>
+        <ul>
+        {% for b in driving_records %}
+            <li>
+                <strong>{{ b.slot.date|date:"d.m.Y" }} {{ b.slot.start_time|time:"H:i" }}</strong>
+                — {{ b.slot.instructor.user.get_full_name }}:
+                {{ b.comment|default:"Комментарий не оставлен" }}
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>Завершённых занятий пока нет.</p>
+    {% endif %}
+</section>
+{% endif %}
 
 <h2>Мои записи</h2>
 <div class="table-wrap">
@@ -77,6 +108,8 @@
         </tbody>
     </table>
 </div>
+
+
 
 <h2>Допуск к экзамену</h2>
 {% for exam in exams %}

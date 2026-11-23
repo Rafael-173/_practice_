@@ -98,23 +98,6 @@ class Instructor(models.Model):
         return f"{self.user.get_full_name()} ({self.branch.name})"
 
 
-class Car(models.Model):
-    instructor = models.ForeignKey(Instructor, on_delete=models.PROTECT, related_name="cars", verbose_name="Инструктор")
-    brand = models.CharField(max_length=50, verbose_name="Марка")
-    model = models.CharField(max_length=50, verbose_name="Модель")
-    transmission = models.CharField(max_length=3, choices=[("MT", "МКПП"), ("AT", "АКПП")], verbose_name="Коробка передач")
-    plate_number = models.CharField(max_length=10, unique=True, verbose_name="Госномер")
-    year = models.PositiveIntegerField(validators=[MinValueValidator(1990), MaxValueValidator(2026)], verbose_name="Год выпуска")
-
-    class Meta:
-        verbose_name = "Учебный автомобиль"
-        verbose_name_plural = "Учебные автомобили"
-        ordering = ["brand", "model"]
-
-    def __str__(self):
-        return f"{self.brand} {self.model} ({self.plate_number})"
-
-
 class InstructorSlot(models.Model):
     instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name="slots", verbose_name="Инструктор")
     date = models.DateField(verbose_name="Дата")
@@ -134,6 +117,24 @@ class InstructorSlot(models.Model):
     def __str__(self):
         return f"{self.instructor.user.get_full_name()} — {self.date} {self.start_time}"
 
+
+class Car(models.Model):
+    instructor = models.ForeignKey(Instructor, on_delete=models.PROTECT, related_name="cars", verbose_name="Инструктор")
+    brand = models.CharField(max_length=50, verbose_name="Марка")
+    model = models.CharField(max_length=50, verbose_name="Модель")
+    transmission = models.CharField(max_length=3, choices=[("MT", "МКПП"), ("AT", "АКПП")], verbose_name="Коробка передач")
+    plate_number = models.CharField(max_length=10, unique=True, verbose_name="Госномер")
+    year = models.PositiveIntegerField(validators=[MinValueValidator(1990), MaxValueValidator(2026)], verbose_name="Год выпуска")
+    # НОВОЕ:
+    photo = models.ImageField(upload_to="cars/", blank=True, null=True, verbose_name="Фото автомобиля")
+
+    class Meta:
+        verbose_name = "Учебный автомобиль"
+        verbose_name_plural = "Учебные автомобили"
+        ordering = ["brand", "model"]
+
+    def __str__(self):
+        return f"{self.brand} {self.model} ({self.plate_number})"
 
 class Booking(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="bookings", verbose_name="Курсант")
@@ -155,6 +156,8 @@ class Booking(models.Model):
 class HoursCard(models.Model):
     student = models.OneToOneField(Student, on_delete=models.CASCADE, related_name="hours_card", verbose_name="Курсант")
     hours_done = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="Отработано часов")
+    hours_platform = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="Площадка, часов")
+    hours_city = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="Город, часов")
     required_hours = models.PositiveIntegerField(default=56, verbose_name="Обязательные часы")
 
     class Meta:
@@ -193,3 +196,20 @@ class GroupInstructor(models.Model):
 
     def __str__(self):
         return f"{self.group.name} — {self.instructor.user.get_full_name()} ({self.role})"
+
+
+
+class Enrollment(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="enrollment", verbose_name="Пользователь")
+    group = models.ForeignKey(StudyGroup, on_delete=models.PROTECT, verbose_name="Группа")
+    is_paid = models.BooleanField(default=False, verbose_name="Оплачено")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+
+    class Meta:
+        verbose_name = "Зачисление"
+        verbose_name_plural = "Зачисления"
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} — {self.group.name} ({'Оплачено' if self.is_paid else 'Не оплачено'})"
+
+
