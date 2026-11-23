@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Загрузка фото автомобиля — АвтоЛайн{% endblock %}
+{% block content %}
+<section class="wrap page narrow">
+    <h1>Добавить автомобиль</h1>
+    <form method="post" enctype="multipart/form-data" class="panel">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="button full">Загрузить</button>
+    </form>
+    <p><a href="{% url 'car_list' %}">← К списку автомобилей</a></p>
+</section>
+{% endblock %}

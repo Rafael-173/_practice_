@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация — АВТОЛАЙН{% endblock %}
+
+{% block content %}
+<section class="form-card registration-card">
+    <span class="eyebrow">СТАНЬТЕ ЧАСТЬЮ АВТОЛАЙН</span>
+    <h1>Регистрация</h1>
+    <p>Заполните данные, чтобы создать аккаунт курсанта и получить доступ к личному кабинету.</p>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-field">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}<small class="help-text">{{ field.help_text|safe }}</small>{% endif %}
+                {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+            </div>
+        {% endfor %}
+        {% if form.non_field_errors %}
+            <div class="field-error">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <button class="btn" type="submit">Зарегистрироваться</button>
+    </form>
+    <p class="form-bottom-link">Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a></p>
+</section>
+{% endblock %}

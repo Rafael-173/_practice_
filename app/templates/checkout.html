@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Оплата — АВТОЛАЙН{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <span class="eyebrow">ОФОРМЛЕНИЕ</span>
+    <h1>Оплата обучения</h1>
+    <p>Вы выбрали группу: <b>{{ group.name }}</b></p>
+    <p>Стоимость: <b>{{ group.price }} ₽</b></p>
+    <p>Филиал: {{ group.branch.name }}</p>
+    <p>Категория: {{ group.category.code }}</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <button class="btn" type="submit">Оплатить и зачислиться</button>
+    </form>
+</div>
+{% endblock %}

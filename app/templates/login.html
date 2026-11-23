@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-card login-card">
+    <span class="eyebrow">С ВОЗВРАЩЕНИЕМ</span>
+    <h1>Войти в аккаунт</h1>
+    
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn" type="submit">Войти</button>
+    </form>
+    
+    <p class="form-bottom-link">Нет аккаунта? <a href="{% url 'register' %}">Зарегистрироваться</a></p>
+
+    <!-- Блок для инструктора -->
+    <div class="instructor-login-block">
+        <p class="muted-text">Вы инструктор автошколы? <a href="{% url 'instructor_login' %}"> Войти как инструктор </a></a></p>
+         
+    </div>
+</div>
+{% endblock %}

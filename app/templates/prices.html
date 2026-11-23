@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Цены — АВТОЛАЙН{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <span class="eyebrow">СТОИМОСТЬ ОБУЧЕНИЯ</span>
+    <h1>Цены и пакеты</h1>
+    <p>Выберите подходящую категорию и филиал.</p>
+</div>
+
+<div class="grid three">
+    {% for group in groups %}
+        <article class="card">
+            <span class="pill">{{ group.category.code }}</span>
+            <h2>{{ group.name }}</h2>
+            <p>{{ group.branch.name }}</p>
+            <strong class="price">{{ group.price }} ₽</strong>
+            <a class="btn btn-outline" href="{% url 'group_detail' group.pk %}">Подробнее</a>
+        </article>
+    {% empty %}
+        <p>Информация о ценах скоро появится.</p>
+    {% endfor %}
+</div>
+{% endblock %}

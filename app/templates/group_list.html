@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Расписание — АВТОЛАЙН{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <span class="eyebrow">НАЧНИ СЕЙЧАС</span>
+    <h1>Расписание групп</h1>
+    <p>Выберите подходящую категорию и филиал.</p>
+</div>
+
+<form class="filters" method="get" id="filters-form">
+    <label>Категория
+        <select name="category">
+            <option value="">Все категории</option>
+            {% for c in categories %}
+                <option value="{{ c.pk }}" {% if request.GET.category == c.pk|stringformat:"s" %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Филиал
+        <select name="branch">
+            <option value="">Все филиалы</option>
+            {% for b in branches %}
+                <option value="{{ b.pk }}" {% if request.GET.branch == b.pk|stringformat:"s" %}selected{% endif %}>{{ b.name }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Коробка передач
+        <select name="transmission">
+            <option value="">Любая</option>
+            <option value="MT" {% if request.GET.transmission == "MT" %}selected{% endif %}>МКПП</option>
+            <option value="AT" {% if request.GET.transmission == "AT" %}selected{% endif %}>АКПП</option>
+        </select>
+    </label>
+</form>
+
+<div id="groups-container">
+    {% include "partials/group_cards.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Автомобили — АвтоЛайн{% endblock %}
+{% block content %}
+<section class="wrap page">
+    <h1>Учебные автомобили</h1>
+    <p><a href="{% url 'car_upload' %}" class="button">Добавить автомобиль</a></p>
+    <div class="panel table-wrap">
+        <table>
+            <thead>
+                <tr><th>Фото</th><th>Марка</th><th>Модель</th><th>Госномер</th><th>КПП</th><th>Инструктор</th></tr>
+            </thead>
+            <tbody>
+                {% for c in cars %}
+                <tr>
+                    <td>{% if c.photo %}<img src="{{ c.photo.url }}" alt="" width="80">{% else %}—{% endif %}</td>
+                    <td>{{ c.brand }}</td>
+                    <td>{{ c.model }}</td>
+                    <td>{{ c.plate_number }}</td>
+                    <td>{{ c.get_transmission_display }}</td>
+                    <td>{{ c.instructor.user.get_full_name }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6">Автомобилей пока нет.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

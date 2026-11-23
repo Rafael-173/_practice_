@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Вход для инструктора — АВТОЛАЙН{% endblock %}
+
+{% block content %}
+<div class="form-card login-card">
+    <span class="eyebrow">РАБОЧИЙ КАБИНЕТ</span>
+    <h1>Вход для инструктора</h1>
+    
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn" type="submit">Войти</button>
+    </form>
+    
+    <p class="form-bottom-link">Нет аккаунта? <a href="{% url 'instructor_register' %}">Зарегистрироваться как инструктор</a></p>
+    <p class="form-bottom-link">Вы курсант? <a href="{% url 'login' %}">Войти как курсант</a></p>
+</div>
+{% endblock %}
