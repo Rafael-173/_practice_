@@ -211,19 +211,25 @@ def booking_create(request, slot_id):
             messages.error(request, "У инструктора нет закрепленного автомобиля.")
             return redirect('cabinet')
 
+        transmission = request.POST.get("transmission") or student.transmission_type
+        if transmission not in ("MT", "AT"):
+            transmission = student.transmission_type
+
         try:
             Booking.objects.create(
                 student=student,
                 slot=slot,
                 car=car,
-                status='active'
+                status='active',
+                transmission_type=transmission,
             )
-            slot.is_booked = True
-            slot.save()
             
             if hours_card := HoursCard.objects.filter(student=student).first():
                 hours_card.hours_done = hours_card.hours_done + 5
                 hours_card.save()
+
+            slot.is_booked = True
+            slot.save(update_fields=["is_booked"])
 
             logger.info(f"Успешная запись: курсант {student.user.username} на слот {slot_id}, бронь создана")
             messages.success(request, "Вы записаны на вождение!")

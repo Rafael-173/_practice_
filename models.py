@@ -141,6 +141,13 @@ class Booking(models.Model):
     slot = models.OneToOneField(InstructorSlot, on_delete=models.PROTECT, related_name="booking", verbose_name="Окно")
     car = models.ForeignKey(Car, on_delete=models.PROTECT, related_name="bookings", verbose_name="Автомобиль")
     status = models.CharField(max_length=10, choices=[("active", "Активна"), ("cancelled", "Отменена"), ("done", "Завершена")], default="active", verbose_name="Статус")
+    
+    transmission_type = models.CharField(
+        max_length=3,
+        choices=[("MT", "МКПП"), ("AT", "АКПП")],
+        default="MT",
+        verbose_name="Тип КПП",
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создана")
     comment = models.TextField(blank=True, null=True, verbose_name="Комментарий инструктора")
 

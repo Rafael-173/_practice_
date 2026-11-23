@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<p class="breadcrumbs">
+    <a href="{% url 'cabinet' %}">Кабинет</a> / Запись на вождение
+</p>
+
+<div class="form-card">
+    <span class="eyebrow">ПОДТВЕРЖДЕНИЕ ЗАПИСИ</span>
+    <h1>Занятие с инструктором</h1>
+    <p><b>{{ slot.instructor }}</b></p>
+    <p>{{ slot.date|date:"d.m.Y" }} · {{ slot.start_time|time:"H:i" }}–{{ slot.end_time|time:"H:i" }}</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-field">
+            <label for="id_transmission">Коробка передач:</label>
+            <select name="transmission" id="id_transmission">
+                <option value="MT">МКПП</option>
+                <option value="AT">АКПП</option>
+            </select>
+        </div>
+        <button class="btn">Подтвердить запись</button>
+    </form>
+</div>
+{% endblock %}
