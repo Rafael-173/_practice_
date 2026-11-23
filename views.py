@@ -169,7 +169,12 @@ def cabinet(request):
     bookings = Booking.objects.filter(student=student).order_by('-slot__date')
     hours = HoursCard.objects.filter(student=student).first()
     exams = InternalExam.objects.filter(student=student)
-    available_slots = InstructorSlot.objects.filter(is_booked=False).order_by('date', 'start_time')[:10]
+    available_slots = (
+    InstructorSlot.objects.filter(is_booked=False)
+    .exclude(booking__isnull=False)  # исключаем те, на которые уже есть бронь
+    .select_related("instructor", "instructor__user")
+    .order_by("date", "start_time")[:10]
+    )
 
     logger.info(f"Кабинет успешно загружен для курсанта: {student.user.get_full_name()}")
     return render(request, 'cabinet.html', {
@@ -179,6 +184,7 @@ def cabinet(request):
         'exams': exams,
         'available_slots': available_slots,
     })
+    
 
 @login_required
 def booking_create(request, slot_id):
