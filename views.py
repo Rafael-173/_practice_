@@ -16,6 +16,7 @@ from decimal import Decimal, InvalidOperation
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from .forms import CarPhotoForm
+from .services import send_booking_email
 
 
 logger = logging.getLogger(__name__)
@@ -216,21 +217,24 @@ def booking_create(request, slot_id):
             transmission = student.transmission_type
 
         try:
-            Booking.objects.create(
+            booking = Booking.objects.create(
                 student=student,
                 slot=slot,
                 car=car,
                 status='active',
                 transmission_type=transmission,
             )
-            
-            
 
             slot.is_booked = True
             slot.save(update_fields=["is_booked"])
 
+            try:
+                send_booking_email(student, booking)
+            except Exception as e:
+                logger.error(f"Email не отправлен: {e}")
+
             logger.info(f"Успешная запись: курсант {student.user.username} на слот {slot_id}, бронь создана")
-            messages.success(request, "Вы записаны на вождение!")
+            messages.success(request, "Вы записаны на вождение!")  
         except Exception as e:
             logger.error(f"Ошибка при создании брони для слота {slot_id}: {e}")
             messages.error(request, "Произошла ошибка при сохранении записи. Попробуйте позже.")
