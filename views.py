@@ -224,9 +224,7 @@ def booking_create(request, slot_id):
                 transmission_type=transmission,
             )
             
-            if hours_card := HoursCard.objects.filter(student=student).first():
-                hours_card.hours_done = hours_card.hours_done + 5
-                hours_card.save()
+            
 
             slot.is_booked = True
             slot.save(update_fields=["is_booked"])
