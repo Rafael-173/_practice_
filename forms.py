@@ -6,6 +6,8 @@ from .models import Student, StudyGroup, Branch, Instructor
 from .models import InstructorSlot
 from django import forms
 from .models import Car
+from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 class RegistrationForm(UserCreationForm):
     first_name = forms.CharField(label="Имя", max_length=150)
@@ -113,7 +115,11 @@ class SlotForm(forms.ModelForm):
             'start_time': forms.TimeInput(attrs={'type': 'time'}),
             'end_time': forms.TimeInput(attrs={'type': 'time'}),
         }
-
+    def clean_date(self):
+        date = self.cleaned_data.get('date')
+        if date and date < timezone.now().date():
+            raise ValidationError("Нельзя создать окно на прошедшую дату.")
+        return date
 
 class CarPhotoForm(forms.ModelForm):
     class Meta:
