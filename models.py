@@ -125,7 +125,6 @@ class Car(models.Model):
     transmission = models.CharField(max_length=3, choices=[("MT", "МКПП"), ("AT", "АКПП")], verbose_name="Коробка передач")
     plate_number = models.CharField(max_length=10, unique=True, verbose_name="Госномер")
     year = models.PositiveIntegerField(validators=[MinValueValidator(1990), MaxValueValidator(2026)], verbose_name="Год выпуска")
-    # НОВОЕ:
     photo = models.ImageField(upload_to="cars/", blank=True, null=True, verbose_name="Фото автомобиля")
 
     class Meta:
