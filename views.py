@@ -17,6 +17,8 @@ from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from .forms import CarPhotoForm
 from .services import send_booking_email
+from datetime import datetime, timedelta
+from django.utils import timezone
 
 
 logger = logging.getLogger(__name__)
@@ -190,6 +192,10 @@ def cabinet(request):
 @login_required
 def booking_create(request, slot_id):
     slot = get_object_or_404(InstructorSlot, id=slot_id)
+    slot_dt = timezone.make_aware(datetime.combine(slot.date, slot.start_time))
+    if slot_dt - timezone.now() < timedelta(hours=24):
+        messages.error(request, "Запись закрыта: до занятия меньше 24 часов.")
+        return redirect('cabinet')
     
     if request.method == 'POST':
         logger.info(f"Курсант {request.user.username} пытается записаться на слот {slot_id}")

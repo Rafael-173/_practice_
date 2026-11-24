@@ -3,6 +3,8 @@ from datetime import date, time
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from datetime import date, time, timedelta
+from django.utils import timezone
 
 from app.models import (
     Category, Branch, StudyGroup, Student, Teacher, Instructor,
@@ -17,6 +19,8 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         self.stdout.write("Заполняем тестовые данные...")
+        today = timezone.now().date()
+
 
         # ---------- 1. Пользователи ----------
         users = {}
@@ -61,10 +65,10 @@ class Command(BaseCommand):
 
         # ---------- 4. Учебные группы ----------
         group_specs = [
-            ("Филиал №1", "Группа-1", "A", date(2026, 2, 1),  date(2026, 4, 2),  "30000.00", 25),
-            ("Филиал №2", "Группа-2", "A", date(2026, 2, 11), date(2026, 4, 12), "35000.00", 25),
-            ("Филиал №1", "Группа-3", "B", date(2026, 2, 21), date(2026, 4, 22), "40000.00", 20),
-            ("Филиал №2", "Группа-4", "B", date(2026, 3, 3),  date(2026, 5, 2),  "45000.00", 20),
+            ("Филиал №1", "Группа-1", "A", today + timedelta(days=10),  today + timedelta(days=70),  "30000.00", 25),
+            ("Филиал №2", "Группа-2", "A", today + timedelta(days=20),  today + timedelta(days=80),  "35000.00", 25),
+            ("Филиал №1", "Группа-3", "B", today + timedelta(days=30),  today + timedelta(days=90),  "40000.00", 20),
+            ("Филиал №2", "Группа-4", "B", today + timedelta(days=40),  today + timedelta(days=100), "45000.00", 20),
         ]
         groups = {}
         for branch_name, name, cat_code, start, end, price, max_students in group_specs:
@@ -116,7 +120,7 @@ class Command(BaseCommand):
             )
         self.stdout.write(f"  group_instructors: {len(gi_specs)} (все 4 группы)")
 
-        # ---------- 8. Автомобили ----------
+                # ---------- 8. Автомобили ----------
         car_mt, _ = Car.objects.update_or_create(
             plate_number="А101ВС77",
             defaults={
@@ -133,26 +137,42 @@ class Command(BaseCommand):
                 "transmission": "AT", "year": 2023,
             },
         )
-        self.stdout.write("  cars: 2 (MT + AT)")
+                
+        Car.objects.update_or_create(
+            plate_number="А103ВС77",
+            defaults={
+                "instructor": instructor1,
+                "brand": "Renault", "model": "Logan",
+                "transmission": "AT", "year": 2023,
+            },
+        )
+        Car.objects.update_or_create(
+            plate_number="А104ВС77",
+            defaults={
+                "instructor": instructor2,
+                "brand": "Hyundai", "model": "Solaris",
+                "transmission": "MT", "year": 2022,
+            },
+        )
 
         # ---------- 9. Окна инструктора 1 ----------
         slot_free, _ = InstructorSlot.objects.update_or_create(
-            instructor=instructor1, date=date(2026, 3, 1), start_time=time(10, 0),
+            instructor=instructor1, date=today + timedelta(days=3), start_time=time(10, 0),
             defaults={"end_time": time(11, 30), "is_booked": False},
         )
         slot_busy, _ = InstructorSlot.objects.update_or_create(
-            instructor=instructor1, date=date(2026, 3, 1), start_time=time(12, 0),
+            instructor=instructor1, date=today + timedelta(days=1), start_time=time(12, 0),
             defaults={"end_time": time(13, 30), "is_booked": True},
         )
         self.stdout.write("  slots instructor1: 2 (1 free, 1 busy)")
 
         # ---------- 10. Окна инструктора 2 (AT) ----------
         slot_at_free, _ = InstructorSlot.objects.update_or_create(
-            instructor=instructor2, date=date(2026, 3, 2), start_time=time(10, 0),
+            instructor=instructor2, date=today + timedelta(days=4), start_time=time(10, 0),
             defaults={"end_time": time(11, 30), "is_booked": False},
         )
         slot_at_busy, _ = InstructorSlot.objects.update_or_create(
-            instructor=instructor2, date=date(2026, 3, 2), start_time=time(12, 0),
+            instructor=instructor2, date=today + timedelta(days=2), start_time=time(12, 0),
             defaults={"end_time": time(13, 30), "is_booked": True},
         )
         self.stdout.write("  slots instructor2: 2 (1 free, 1 busy)")
@@ -211,8 +231,8 @@ class Command(BaseCommand):
 
         # ---------- 14. Внутренние экзамены ----------
         for exam_type, exam_date, result in [
-            ("theory",   date(2026, 3, 1), "pass"),
-            ("practice", date(2026, 4, 1), "pending"),
+            ("theory",   today + timedelta(days=15), "pass"),
+            ("practice", today + timedelta(days=45), "pending"),
         ]:
             InternalExam.objects.update_or_create(
                 student=student,
