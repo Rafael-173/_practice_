@@ -19,6 +19,8 @@ from .forms import CarPhotoForm
 from .services import send_booking_email
 from datetime import datetime, timedelta
 from django.utils import timezone
+from django.core.paginator import Paginator
+from django.db import transaction  # <--- ДОБАВЛЕНО для транзакций
 
 
 logger = logging.getLogger(__name__)
@@ -62,6 +64,8 @@ def package_price(request, pk):
     try:
         total = calculate_package_price(group, hours)
     except PackagePriceError as e:
+        # === ДОБАВЛЕНО ЛОГИРОВАНИЕ ===
+        logger.warning(f"Некорректный расчёт пакета: group={group.pk}, hours={hours}, error={e}")
         return JsonResponse({"error": str(e)}, status=400)
 
     return JsonResponse({
@@ -129,24 +133,31 @@ def group_list(request):
 
     category = request.GET.get("category")
     branch = request.GET.get("branch")
-    transmission = request.GET.get("transmission")  # MT / AT
+    transmission = request.GET.get("transmission")
 
     if category:
         groups = groups.filter(category_id=category)
     if branch:
         groups = groups.filter(branch_id=branch)
     if transmission in ("MT", "AT"):
-        # группы, у которых есть инструктор с авто нужной КПП
         groups = groups.filter(
             group_instructors__instructor__cars__transmission=transmission
         ).distinct()
 
+    # === ПАГИНАЦИЯ ===
+    paginator = Paginator(groups, 12)  # 12 записей на страницу
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    # === AJAX-ЗАПРОС (фильтр) ===
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
-        html = render_to_string("partials/group_cards.html", {"groups": groups})
+        html = render_to_string("partials/group_cards.html", {"groups": page_obj})
         return JsonResponse({"html": html})
 
+    # === ОБЫЧНЫЙ ЗАПРОС (при открытии страницы) ===
     return render(request, "group_list.html", {
-        "groups": groups,
+        "groups": page_obj,
+        "page_obj": page_obj,
         "categories": Category.objects.all(),
         "branches": Branch.objects.all(),
     })
@@ -174,7 +185,7 @@ def cabinet(request):
     exams = InternalExam.objects.filter(student=student)
     available_slots = (
     InstructorSlot.objects.filter(is_booked=False)
-    .exclude(booking__isnull=False)  # исключаем те, на которые уже есть бронь
+    .exclude(booking__isnull=False)
     .select_related("instructor", "instructor__user")
     .order_by("date", "start_time")[:10]
     )
@@ -223,21 +234,23 @@ def booking_create(request, slot_id):
             transmission = student.transmission_type
 
         try:
-            booking = Booking.objects.create(
-                student=student,
-                slot=slot,
-                car=car,
-                status='active',
-                transmission_type=transmission,
-            )
+            # === ДОБАВЛЕНА ТРАНЗАКЦИЯ ===
+            with transaction.atomic():
+                booking = Booking.objects.create(
+                    student=student,
+                    slot=slot,
+                    car=car,
+                    status='active',
+                    transmission_type=transmission,
+                )
 
-            slot.is_booked = True
-            slot.save(update_fields=["is_booked"])
+                slot.is_booked = True
+                slot.save(update_fields=["is_booked"])
 
-            try:
-                send_booking_email(student, booking)
-            except Exception as e:
-                logger.error(f"Email не отправлен: {e}")
+                try:
+                    send_booking_email(student, booking)
+                except Exception as e:
+                    logger.error(f"Email не отправлен: {e}")
 
             logger.info(f"Успешная запись: курсант {student.user.username} на слот {slot_id}, бронь создана")
             messages.success(request, "Вы записаны на вождение!")  
@@ -322,7 +335,8 @@ def car_upload(request):
             logger.info("Автомобиль добавлен: id=%s, %s %s, %s",
                         car.id, car.brand, car.model, car.plate_number)
             messages.success(request, "Автомобиль добавлен")
-            return redirect("car_list")
+            
+            return redirect("car_list")  
     else:
         form = CarPhotoForm()
     return render(request, "cars/upload.html", {"form": form})
