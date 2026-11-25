@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Страница не найдена — АвтоЛайн{% endblock %}
+{% block content %}
+<section class="wrap page narrow" style="text-align: center; padding: 50px 20px;">
+    <h1 style="font-size: 72px; color: var(--accent); margin: 0;">404</h1>
+    <h2 style="color: var(--primary);">Страница не найдена</h2>
+    <p style="color: var(--muted); margin-bottom: 30px;">Возможно, она была удалена или вы ошиблись в адресе.</p>
+    <a href="{% url 'index' %}" class="button">Вернуться на главную</a>
+</section>
+{% endblock %}
