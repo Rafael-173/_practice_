@@ -9,17 +9,35 @@
     <p>Заполните данные, чтобы создать аккаунт курсанта и получить доступ к личному кабинету.</p>
     <form method="post">
         {% csrf_token %}
+        
         {% for field in form %}
             <div class="form-field">
                 {{ field.label_tag }}
                 {{ field }}
-                {% if field.help_text %}<small class="help-text">{{ field.help_text|safe }}</small>{% endif %}
-                {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                
+                <!-- Вывод подсказок (серым, мелким шрифтом) -->
+                {% if field.help_text %}
+                    <small style="display: block; color: #7a8496; font-size: 12px; margin-top: 4px;">
+                        {{ field.help_text|safe }}
+                    </small>
+                {% endif %}
+                
+                <!-- Вывод ошибок (ярко-красным, с фоном) -->
+                {% for error in field.errors %}
+                    <div style="color: #c62828; background-color: #ffebee; font-weight: bold; font-size: 13px; padding: 6px 10px; margin-top: 6px; border-radius: 4px; border-left: 3px solid #c62828;">
+                        {{ error }}
+                    </div>
+                {% endfor %}
             </div>
         {% endfor %}
+        
+        <!-- Общие ошибки формы (если есть) -->
         {% if form.non_field_errors %}
-            <div class="field-error">{{ form.non_field_errors }}</div>
+            <div style="color: #c62828; background-color: #ffebee; font-weight: bold; padding: 10px; margin-top: 16px; border-radius: 4px;">
+                {{ form.non_field_errors }}
+            </div>
         {% endif %}
+        
         <button class="btn" type="submit">Зарегистрироваться</button>
     </form>
     <p class="form-bottom-link">Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a></p>

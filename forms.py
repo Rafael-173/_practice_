@@ -1,14 +1,11 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
-from .models import Instructor, Branch
-from .models import Student, StudyGroup, Branch, Instructor
-from .models import InstructorSlot
-from django import forms
-from .models import Car
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from .models import Student, StudyGroup, Branch, Instructor, InstructorSlot, Car
 
+# --- Форма регистрации курсанта ---
 class RegistrationForm(UserCreationForm):
     first_name = forms.CharField(label="Имя", max_length=150)
     last_name = forms.CharField(label="Фамилия", max_length=150)
@@ -36,13 +33,44 @@ class RegistrationForm(UserCreationForm):
             "phone", "birth_date", "group", "transmission_type",
             "password1", "password2",
         )
-        labels = {"username": "Логин"}
+        labels = {
+            "username": "Логин",
+            "first_name": "Имя",
+            "last_name": "Фамилия",
+            "email": "Электронная почта",
+            "phone": "Телефон",
+            "birth_date": "Дата рождения",
+            "group": "Учебная группа",
+            "transmission_type": "Коробка передач",
+            "password1": "Пароль",
+            "password2": "Подтверждение пароля",
+        }
 
     def clean_email(self):
+        """Проверка на уникальность email."""
         email = self.cleaned_data["email"].strip().lower()
         if User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError("Пользователь с такой почтой уже зарегистрирован.")
         return email
+
+    def clean_phone(self):
+        """Проверка формата телефона."""
+        phone = self.cleaned_data.get("phone", "")
+        import re
+        if not re.match(r"^[\d\s\+\-\(\)]+$", phone):
+            raise forms.ValidationError("Введите телефон в формате +7 900 000-00-00. Разрешены только цифры и символы +, -, (, ).")
+        return phone
+
+    def clean(self):
+        """Проверка двух полей сразу: пароль не должен содержать логин."""
+        cleaned_data = super().clean()
+        username = cleaned_data.get("username")
+        password = cleaned_data.get("password1")
+
+        if username and password and username.lower() in password.lower():
+            self.add_error("password1", "Пароль не должен содержать логин. Придумайте другой пароль.")
+        
+        return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -60,10 +88,14 @@ class RegistrationForm(UserCreationForm):
             )
         return user
 
+
+# --- Форма входа инструктора ---
 class InstructorLoginForm(AuthenticationForm):
     username = forms.CharField(label="Логин инструктора", widget=forms.TextInput(attrs={'class': 'form-control'}))
     password = forms.CharField(label="Пароль", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
 
+
+# --- Форма регистрации инструктора ---
 class InstructorRegistrationForm(UserCreationForm):
     first_name = forms.CharField(label="Имя", max_length=150)
     last_name = forms.CharField(label="Фамилия", max_length=150)
@@ -104,8 +136,9 @@ class InstructorRegistrationForm(UserCreationForm):
                 experience_years=self.cleaned_data["experience_years"],
             )
         return user
-    
 
+
+# --- Форма создания слота инструктором ---
 class SlotForm(forms.ModelForm):
     class Meta:
         model = InstructorSlot
@@ -115,16 +148,19 @@ class SlotForm(forms.ModelForm):
             'start_time': forms.TimeInput(attrs={'type': 'time'}),
             'end_time': forms.TimeInput(attrs={'type': 'time'}),
         }
+
     def clean_date(self):
         date = self.cleaned_data.get('date')
         if date and date < timezone.now().date():
-            raise ValidationError("Нельзя создать окно на прошедшую дату.")
+            raise ValidationError("Нельзя создать окно на прошедшую дату. Выберите будущую дату.")
         return date
 
+
+# --- Форма загрузки фото автомобиля ---
 class CarPhotoForm(forms.ModelForm):
     class Meta:
         model = Car
-        fields = ("brand", "model", "plate_number","year", "instructor", "photo")
+        fields = ("brand", "model", "plate_number", "year", "instructor", "photo")
         labels = {
             "brand": "Марка",
             "model": "Модель",
@@ -137,11 +173,14 @@ class CarPhotoForm(forms.ModelForm):
     def clean_photo(self):
         photo = self.cleaned_data.get("photo")
         if photo:
+            # Проверка размера
             if photo.size > 2 * 1024 * 1024:
                 raise forms.ValidationError("Размер изображения не должен превышать 2 МБ.")
+            
             from PIL import Image, UnidentifiedImageError
             try:
                 image = Image.open(photo)
+                # Проверка формата
                 if image.format not in ("JPEG", "PNG"):
                     raise forms.ValidationError("Разрешены только изображения JPEG и PNG.")
                 image.verify()
